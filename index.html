@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎮 30 Игр — Игровой Портал</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0b0b1f;
+      --glass: rgba(20, 20, 50, 0.6);
+      --accent: #7c5cfc;
+      --accent2: #c4b5fd;
+      --gold: #facc15;
+      --text: #e2e8f0;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --card-bg: rgba(30, 30, 70, 0.5);
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      background-image: radial-gradient(ellipse at 20% 30%, rgba(124,92,252,0.2) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 70%, rgba(250,204,21,0.15) 0%, transparent 50%);
+    }
+    .stars {
+      position: fixed; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index:0;
+    }
+    .star {
+      position: absolute; background: white; border-radius: 50%;
+      animation: twinkle var(--dur) ease-in-out infinite; animation-delay: var(--delay); opacity:0;
+    }
+    @keyframes twinkle {
+      0%,100% { opacity:0.2; transform:scale(1); }
+      50% { opacity:1; transform:scale(2); }
+    }
+    .container {
+      max-width: 1300px; margin:0 auto; padding:20px; position:relative; z-index:1;
+    }
+    header {
+      text-align: center; padding: 30px 20px 10px;
+    }
+    header h1 {
+      font-size: 3rem;
+      background: linear-gradient(135deg, #a78bfa, #facc15, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      letter-spacing: 2px; margin-bottom: 8px;
+    }
+    header p { font-size: 1.1rem; color: #94a3b8; }
+    .game-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(170px,1fr));
+      gap: 18px; padding: 20px 0;
+    }
+    .game-card {
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px; padding: 20px 12px; text-align: center; cursor: pointer;
+      transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    .game-card:hover {
+      transform: translateY(-8px); border-color: var(--accent);
+      box-shadow: 0 20px 40px rgba(124,92,252,0.4); background: rgba(50,50,90,0.7);
+    }
+    .game-card .icon { font-size: 2.8rem; display: block; margin-bottom: 12px; }
+    .game-card .title { font-weight: 700; font-size: 1rem; color: #e2e8f0; }
+    .game-card .badge {
+      display: inline-block; font-size: 0.7rem; padding: 4px 12px; border-radius: 20px;
+      background: rgba(124,92,252,0.3); color: var(--accent2); margin-top: 8px;
+    }
+    .game-area {
+      display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+      background: rgba(10,10,25,0.95); backdrop-filter: blur(20px); z-index:100;
+      overflow-y: auto; flex-direction: column; align-items: center; padding: 20px;
+    }
+    .game-area.active { display: flex; }
+    .back-btn {
+      position: sticky; top: 20px; background: var(--accent); color:#fff; border:none;
+      padding: 12px 30px; border-radius: 30px; cursor:pointer; font-weight:700; font-size:1rem;
+      letter-spacing:1px; margin-bottom:20px; z-index:10; transition: 0.3s;
+    }
+    .back-btn:hover { background: #9370ff; box-shadow:0 8px 25px rgba(124,92,252,0.5); }
+    .game-content { max-width: 750px; width:100%; text-align:center; }
+    canvas { border-radius: 16px; background: #111; max-width:100%; box-shadow:0 10px 30px rgba(0,0,0,0.5); }
+    button {
+      background: var(--accent); color:#fff; border:none; padding:10px 22px; border-radius:30px;
+      cursor:pointer; font-weight:600; margin:6px; transition:0.3s;
+    }
+    button:hover { background: #9370ff; box-shadow:0 5px 20px rgba(124,92,252,0.4); }
+    .score { font-size:1.3rem; font-weight:700; color:var(--gold); margin:8px 0; }
+    .grid-3x3 { display:grid; grid-template-columns:repeat(3,80px); gap:6px; justify-content:center; }
+    .grid-3x3 div { background:var(--glass); border-radius:12px; height:80px; display:flex; align-items:center; justify-content:center; font-size:2rem; cursor:pointer; }
+    .memory-grid { display:grid; grid-template-columns:repeat(4,70px); gap:8px; justify-content:center; }
+    .memory-grid .card { width:70px; height:70px; background:var(--accent); border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:2rem; transition:0.3s; }
+    .memory-grid .card.flipped { background:#fff; color:#000; }
+    .memory-grid .card.matched { background:var(--success); pointer-events:none; opacity:0.7; }
+    .mole-grid { display:grid; grid-template-columns:repeat(3,90px); gap:10px; justify-content:center; }
+    .mole-grid .hole { width:90px; height:90px; background:#3b280b; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:3rem; }
+    .battleship-container { display:flex; flex-wrap:wrap; justify-content:center; gap:30px; margin:15px 0; }
+    .board-wrapper { text-align:center; }
+    .battleship-grid { display:grid; grid-template-columns:repeat(10,32px); grid-template-rows:repeat(10,32px); gap:1px; background:#14213d; padding:2px; border-radius:8px; }
+    .battleship-cell { width:32px; height:32px; background:#0d1b33; border-radius:3px; display:flex; align-items:center; justify-content:center; font-size:0.9rem; cursor:default; transition:0.1s; }
+    .battleship-cell.ship { background:#2ecc71; }
+    .battleship-cell.hit { background:#ef4444; }
+    .battleship-cell.miss { background:#4b5563; }
+    .battleship-cell.placeable { cursor:pointer; background:#1e3a5f; }
+    .battleship-cell.placeable:hover { background:#4f46e5; }
+    .battleship-cell.preview { background: #a78bfa; }
+    .ship-select { display:flex; gap:10px; justify-content:center; margin:10px 0; flex-wrap:wrap; }
+    .ship-btn { padding:8px 16px; border-radius:20px; background:var(--glass); border:2px solid transparent; }
+    .ship-btn.selected { border-color:var(--gold); background:var(--accent); }
+    .overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:200; }
+    .overlay-content { background:var(--bg); padding:30px; border-radius:24px; text-align:center; border:1px solid var(--accent); }
+    .footer {
+      text-align: center; padding: 20px; color: #64748b; font-size: 0.8rem;
+      border-top: 1px solid rgba(255,255,255,0.1); margin-top: 40px;
+    }
+    .footer a { color: #a78bfa; text-decoration: none; }
+    @media (max-width:768px) {
+      .game-grid { grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); }
+      .battleship-grid { grid-template-columns:repeat(10,26px); grid-template-rows:repeat(10,26px); }
+      .battleship-cell { width:26px; height:26px; font-size:0.7rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="stars" id="starsContainer"></div>
+<div class="container" id="mainMenu">
+  <header>
+    <h1>🎮 30 ИГР</h1>
+    <p>Выбери игру и играй прямо в браузере!</p>
+  </header>
+  <div class="game-grid" id="gameGrid"></div>
+  <div class="footer">
+    Поддержка: <a href="mailto:kiriliva01@list.ru">kiriliva01@list.ru</a> &nbsp;|&nbsp; TG: <a href="https://t.me/ivakisrr" target="_blank">@ivakisrr</a>
+  </div>
+</div>
+<div class="game-area" id="gameArea"></div>
+
+<script>
+  (()=>{
+    const sc=document.getElementById('starsContainer');
+    for(let i=0;i<100;i++){const s=document.createElement('div'); s.className='star'; s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${1+Math.random()*3}px;height:${1+Math.random()*3}px;--dur:${2+Math.random()*4}s;--delay:${Math.random()*5}s`; sc.appendChild(s);}
+  })();
+
+  const games = [
+    {id:'tictactoe',name:'Крестики-Нолики',icon:'❌⭕',badge:'Логика'},
+    {id:'snake',name:'Змейка',icon:'🐍',badge:'Аркада'},
+    {id:'memory',name:'Мемори',icon:'🧠',badge:'Память'},
+    {id:'rps',name:'Камень-Ножницы-Бумага',icon:'✊✋✌️',badge:'Удача'},
+    {id:'guessnumber',name:'Угадай Число',icon:'🔢',badge:'Логика'},
+    {id:'whackamole',name:'Ударь Крота',icon:'🔨🐹',badge:'Реакция'},
+    {id:'typing',name:'Скорость Печати',icon:'⌨️',badge:'Навык'},
+    {id:'colorguess',name:'Угадай Цвет',icon:'🎨',badge:'Внимание'},
+    {id:'mathquiz',name:'Математика',icon:'🧮',badge:'Ум'},
+    {id:'reaction',name:'Реакция',icon:'⚡',badge:'Скорость'},
+    {id:'dice',name:'Кости',icon:'🎲',badge:'Удача'},
+    {id:'wordscramble',name:'Анаграммы',icon:'🔤',badge:'Слова'},
+    {id:'simon',name:'Саймон',icon:'🔴🟢🔵🟡',badge:'Память'},
+    {id:'puzzle15',name:'Пятнашки',icon:'🧩',badge:'Логика'},
+    {id:'pong',name:'Понг',icon:'🏓',badge:'Аркада'},
+    {id:'breakout',name:'Брейкаут',icon:'🧱',badge:'Аркада'},
+    {id:'flappy',name:'Flappy Bird',icon:'🐦',badge:'Аркада'},
+    {id:'spaceshooter',name:'Космо-Стрелялка',icon:'🚀',badge:'Экшн'},
+    {id:'minesweeper',name:'Сапёр',icon:'💣',badge:'Логика'},
+    {id:'connect4',name:'4 в Ряд',icon:'🟡🔴',badge:'Стратегия'},
+    {id:'coinflip',name:'Монетка',icon:'🪙',badge:'Удача'},
+    {id:'clickspeed',name:'Клик-Тест',icon:'🖱️',badge:'Скорость'},
+    {id:'maze',name:'Лабиринт',icon:'🏰',badge:'Логика'},
+    {id:'doodlejump',name:'Doodle Jump',icon:'📱',badge:'Аркада'},
+    {id:'towerbuilder',name:'Башня',icon:'🏗️',badge:'Точность'},
+    {id:'catchfall',name:'Лови Предметы',icon:'🧺',badge:'Реакция'},
+    {id:'aimtrainer',name:'Тренажёр AIM',icon:'🎯',badge:'Меткость'},
+    {id:'bubblepop',name:'Лопай Пузыри',icon:'🫧',badge:'Релакс'},
+    {id:'battleship',name:'Морской бой',icon:'⚓',badge:'Стратегия'},
+    {id:'game2048',name:'2048',icon:'🔢',badge:'Головоломка'}
+  ];
+
+  const grid=document.getElementById('gameGrid');
+  games.forEach((g,i)=>{
+    const c=document.createElement('div'); c.className='game-card';
+    c.innerHTML=`<span class="icon">${g.icon}</span><div class="title">${g.name}</div><span class="badge">${g.badge}</span>`;
+    c.addEventListener('click',()=>openGame(g)); grid.appendChild(c);
+  });
+
+  const area=document.getElementById('gameArea'), menu=document.getElementById('mainMenu');
+  let cleanupFn=null;
+  function openGame(g){
+    menu.style.display='none'; area.innerHTML=''; area.className='game-area active';
+    const back=document.createElement('button'); back.className='back-btn'; back.textContent='← НАЗАД';
+    back.onclick=closeGame; area.appendChild(back);
+    const h2=document.createElement('h2'); h2.textContent=g.name; area.appendChild(h2);
+    const content=document.createElement('div'); content.className='game-content'; content.id='gc'; area.appendChild(content);
+    if(cleanupFn){cleanupFn(); cleanupFn=null;}
+    cleanupFn=launchGame(g,content);
+  }
+  function closeGame(){
+    if(cleanupFn){cleanupFn(); cleanupFn=null;}
+    area.className='game-area'; area.innerHTML=''; menu.style.display='block';
+  }
+
+  function launchGame(g,c){ switch(g.id){
+    case 'tictactoe': return initTTT(c);
+    case 'snake': return initSnake(c);
+    case 'memory': return initMemory(c);
+    case 'rps': return initRPS(c);
+    case 'guessnumber': return initGuessNum(c);
+    case 'whackamole': return initMole(c);
+    case 'typing': return initTyping(c);
+    case 'colorguess': return initColor(c);
+    case 'mathquiz': return initMath(c);
+    case 'reaction': return initReaction(c);
+    case 'dice': return initDice(c);
+    case 'wordscramble': return initWordScramble(c);
+    case 'simon': return initSimon(c);
+    case 'puzzle15': return initPuzzle15(c);
+    case 'pong': return initPong(c);
+    case 'breakout': return initBreakout(c);
+    case 'flappy': return initFlappy(c);
+    case 'spaceshooter': return initShooter(c);
+    case 'minesweeper': return initMinesweeper(c);
+    case 'connect4': return initConnect4(c);
+    case 'coinflip': return initCoinFlip(c);
+    case 'clickspeed': return initClickSpeed(c);
+    case 'maze': return initMaze(c);
+    case 'doodlejump': return initDoodle(c);
+    case 'towerbuilder': return initTower(c);
+    case 'catchfall': return initCatch(c);
+    case 'aimtrainer': return initAim(c);
+    case 'bubblepop': return initBubble(c);
+    case 'battleship': return initBattle(c);
+    case 'game2048': return init2048(c);
+    default: return null;
+  }}
+
+  // ---------- 1. Крестики-Нолики ----------
+  function initTTT(c){ c.innerHTML=`<div class="score" id="tttStat">Ход: ❌</div><div class="grid-3x3" id="tttGrid"></div><button id="tttReset">🔄 Новая игра</button>`; let b=Array(9).fill(null), turn='X', over=false; const grid=c.querySelector('#tttGrid'),stat=c.querySelector('#tttStat'); function render(){grid.innerHTML='';b.forEach((v,i)=>{const d=document.createElement('div'); d.textContent=v==='X'?'❌':v==='O'?'⭕':''; d.onclick=()=>move(i);grid.appendChild(d);});} function move(i){if(b[i]||over)return; b[i]=turn; if(checkWin(b,turn)){over=true;stat.textContent=`Победил ${turn==='X'?'❌':'⭕'}!`;}else if(b.every(x=>x)){over=true;stat.textContent='Ничья!';}else{turn=turn==='X'?'O':'X';stat.textContent=`Ход: ${turn==='X'?'❌':'⭕'}`;} render();} function checkWin(b,p){const w=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; return w.some(a=>a.every(i=>b[i]===p));} c.querySelector('#tttReset').onclick=()=>{b=Array(9).fill(null);turn='X';over=false;stat.textContent='Ход: ❌';render();}; render(); return ()=>{}; }
+
+  // ---------- 2. Змейка ----------
+  function initSnake(c){ c.innerHTML=`<div class="score" id="snScore">Счёт: 0</div><canvas id="snCanvas" width="400" height="400"></canvas><button id="snRestart">🔄 Заново</button>`; const canvas=c.querySelector('#snCanvas'),ctx=canvas.getContext('2d'),scoreEl=c.querySelector('#snScore'); let snake=[{x:10,y:10}],dir={x:1,y:0},food,score=0,over=false,interval; function spawn(){let f; do{f={x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*20)};}while(snake.some(s=>s.x===f.x&&s.y===f.y));return f;} food=spawn(); function step(){if(over)return; const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y}; if(head.x<0||head.x>=20||head.y<0||head.y>=20||snake.some(s=>s.x===head.x&&s.y===head.y)){over=true;clearInterval(interval);scoreEl.textContent=`Игра окончена! Счёт: ${score}`;return;} snake.unshift(head); if(head.x===food.x&&head.y===food.y){score++;food=spawn();}else{snake.pop();} scoreEl.textContent=`Счёт: ${score}`; draw();} function draw(){ctx.fillStyle='#111';ctx.fillRect(0,0,400,400);ctx.fillStyle='#2ecc71'; snake.forEach(s=>ctx.fillRect(s.x*20,s.y*20,18,18));ctx.fillStyle='#e74c3c';ctx.fillRect(food.x*20,food.y*20,18,18);} function key(e){const map={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0}}; if(map[e.key]){e.preventDefault(); const nd=map[e.key]; if(nd.x!==-dir.x||nd.y!==-dir.y) dir=nd;}} document.addEventListener('keydown',key); c.querySelector('#snRestart').onclick=()=>{clearInterval(interval); snake=[{x:10,y:10}];dir={x:1,y:0};food=spawn();score=0;over=false;scoreEl.textContent='Счёт: 0';interval=setInterval(step,120);}; interval=setInterval(step,120); draw(); return ()=>{clearInterval(interval);document.removeEventListener('keydown',key);}; }
+
+  // ---------- 3. Мемори ----------
+  function initMemory(c){ c.innerHTML=`<div class="score" id="memScore">Пары: 0/8</div><div class="memory-grid" id="memGrid"></div><button id="memReset">🔄 Перемешать</button>`; const emojis=['🍎','🍊','🍋','🍇','🍒','🥝','🍑','🍌']; let cards=[...emojis,...emojis].sort(()=>Math.random()-0.5),flipped=[],matched=[],lock=false; const grid=c.querySelector('#memGrid'),scoreEl=c.querySelector('#memScore'); function render(){grid.innerHTML='';cards.forEach((e,i)=>{const card=document.createElement('div');card.className='card';if(flipped.includes(i)||matched.includes(i)){card.classList.add('flipped');card.textContent=e;} if(matched.includes(i))card.classList.add('matched');card.onclick=()=>flip(i);grid.appendChild(card);});scoreEl.textContent=`Пары: ${matched.length/2}/8`; if(matched.length===16)scoreEl.textContent='Победа!';} function flip(i){if(lock||flipped.includes(i)||matched.includes(i)||flipped.length>=2)return; flipped.push(i);render();if(flipped.length===2){lock=true;const[a,b]=flipped;if(cards[a]===cards[b]){matched.push(a,b);flipped=[];lock=false;render();}else setTimeout(()=>{flipped=[];lock=false;render();},700);}} c.querySelector('#memReset').onclick=()=>{cards=[...emojis,...emojis].sort(()=>Math.random()-0.5);flipped=[];matched=[];lock=false;render();}; render(); return ()=>{}; }
+
+  // ---------- 4. Камень-Ножницы-Бумага ----------
+  function initRPS(c){ c.innerHTML=`<div class="score" id="rpsScore">Ты 0 - 0 Комп</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button data-v="rock">✊ Камень</button><button data-v="scissors">✌️ Ножницы</button><button data-v="paper">✋ Бумага</button></div><div id="rpsRes" style="margin-top:12px;"></div>`; let p=0,o=0; const s=c.querySelector('#rpsScore'),r=c.querySelector('#rpsRes'); c.querySelectorAll('button[data-v]').forEach(b=>b.onclick=()=>{const arr=['rock','scissors','paper']; const pl=b.dataset.v, comp=arr[Math.floor(Math.random()*3)]; const em={rock:'✊',scissors:'✌️',paper:'✋'}; let res=''; if(pl===comp)res='Ничья'; else if((pl==='rock'&&comp==='scissors')||(pl==='scissors'&&comp==='paper')||(pl==='paper'&&comp==='rock')){res='Ты выиграл!';p++;}else{res='Комп выиграл';o++;} s.textContent=`Ты ${p} - ${o} Комп`; r.textContent=`${em[pl]} vs ${em[comp]} — ${res}`;}); return ()=>{}; }
+
+  // ---------- 5. Угадай число ----------
+  function initGuessNum(c){ c.innerHTML=`<p>Число от 1 до 100</p><input type="number" id="gnInput" min="1" max="100"><button id="gnBtn">Угадать</button><div id="gnHint"></div><div class="score" id="gnAtt">Попытки: 0</div><button id="gnReset">Новое</button>`; let secret=Math.floor(Math.random()*100)+1,att=0; const hint=c.querySelector('#gnHint'),attEl=c.querySelector('#gnAtt'),inp=c.querySelector('#gnInput'); c.querySelector('#gnBtn').onclick=()=>{const g=parseInt(inp.value);if(isNaN(g))return; att++; attEl.textContent=`Попытки: ${att}`; if(g===secret)hint.textContent=`Верно! ${secret}`; else if(g<secret)hint.textContent='Больше'; else hint.textContent='Меньше';}; c.querySelector('#gnReset').onclick=()=>{secret=Math.floor(Math.random()*100)+1;att=0;hint.textContent='';attEl.textContent='Попытки: 0';inp.value='';}; return ()=>{}; }
+
+  // ---------- 6. Ударь крота ----------
+  function initMole(c){ c.innerHTML=`<div class="score" id="moleScore">0</div><div class="mole-grid" id="moleGrid"></div><button id="moleStart">Старт</button>`; let score=0,active=-1,playing=false,interval; const grid=c.querySelector('#moleGrid'),scEl=c.querySelector('#moleScore'); for(let i=0;i<9;i++){const h=document.createElement('div');h.className='hole';h.dataset.i=i;h.onclick=()=>{if(playing&&parseInt(h.dataset.i)===active){score++;scEl.textContent=score;active=-1;render();}};grid.appendChild(h);} function render(){[...grid.children].forEach((h,i)=>{h.classList.toggle('active',i===active);h.textContent=i===active?'🐹':'';});} function start(){score=0;playing=true;scEl.textContent='0';clearInterval(interval); interval=setInterval(()=>{active=Math.floor(Math.random()*9);render();setTimeout(()=>{active=-1;render();},600);},800); setTimeout(()=>{clearInterval(interval);playing=false;active=-1;render();scEl.textContent=`Финиш: ${score}`;},15000);} c.querySelector('#moleStart').onclick=start; render(); return ()=>clearInterval(interval); }
+
+  // ---------- 7. Скорость печати ----------
+  function initTyping(c){ c.innerHTML=`<p id="tw" style="font-size:2rem;color:#facc15;"></p><input id="ti" placeholder="печатай..." disabled><div class="score" id="ts">Слов:0 Точность:100%</div><button id="tstart">Старт</button>`; const words=['кот','дом','лес','мир','брат','стол','птица','река','гора','поле','ветер','звезда','книга']; let word='',wc=0,cor=0,tot=0,playing=false,timer; const wEl=c.querySelector('#tw'),inp=c.querySelector('#ti'),sEl=c.querySelector('#ts'); function newWord(){word=words[Math.floor(Math.random()*words.length)];wEl.textContent=word;} c.querySelector('#tstart').onclick=()=>{playing=true;wc=0;cor=0;tot=0;inp.disabled=false;inp.value='';inp.focus();newWord();clearTimeout(timer);timer=setTimeout(end,30000);sEl.textContent='Слов:0 Точность:100%';}; function end(){playing=false;inp.disabled=true;const acc=tot?Math.round(cor/tot*100):100; sEl.textContent=`Финиш! Слов:${wc} Точность:${acc}%`; wEl.textContent='Конец';} inp.oninput=()=>{if(!playing)return;const v=inp.value.trim();tot++; if(v===word){wc++;cor++;inp.value='';newWord();}else if(word.startsWith(v))cor++; else{inp.value=v.slice(0,-1);} const acc=tot?Math.round(cor/tot*100):100; sEl.textContent=`Слов:${wc} Точность:${acc}%`;}; return ()=>clearTimeout(timer); }
+
+  // ---------- 8. Угадай цвет ----------
+  function initColor(c){ c.innerHTML=`<div class="color-box" id="cb"></div><p>Какой цвет?</p><div id="copts" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;"></div><div class="score" id="csc">0</div>`; const cols=[{n:'red',h:'#ef4444'},{n:'blue',h:'#3b82f6'},{n:'green',h:'#22c55e'},{n:'yellow',h:'#eab308'},{n:'purple',h:'#a855f7'},{n:'orange',h:'#f97316'},{n:'pink',h:'#ec4899'},{n:'white',h:'#f1f5f9'},{n:'black',h:'#1e293b'}]; let cur,sc=0; const box=c.querySelector('#cb'),opts=c.querySelector('#copts'),scEl=c.querySelector('#csc'); function round(){cur=cols[Math.floor(Math.random()*cols.length)];box.style.background=cur.h; const options=[cur.n]; while(options.length<4){const r=cols[Math.floor(Math.random()*cols.length)].n; if(!options.includes(r))options.push(r);} options.sort(()=>Math.random()-0.5); opts.innerHTML=''; options.forEach(o=>{const b=document.createElement('button');b.textContent=o;b.onclick=()=>{if(o===cur.n){sc++;scEl.textContent=sc+' ✅';}else scEl.textContent=sc+` ❌ (${cur.n})`; round();};opts.appendChild(b);});} round(); return ()=>{}; }
+
+  // ---------- 9. Математика ----------
+  function initMath(c){ c.innerHTML=`<p id="mq" style="font-size:2rem;color:#facc15;"></p><input type="number" id="mi" placeholder="Ответ"><button id="ms">Ответить</button><div class="score" id="msc">Правильно:0 Всего:0</div><button id="mstart">Старт</button>`; let ans,cor=0,tot=0,playing=false,timer; const qEl=c.querySelector('#mq'),inp=c.querySelector('#mi'),sEl=c.querySelector('#msc'); function gen(){const a=Math.floor(Math.random()*30)+1,b=Math.floor(Math.random()*20)+1,ops=['+','-','*']; const op=ops[Math.floor(Math.random()*3)]; if(op==='+')ans=a+b; else if(op==='-')ans=a-b; else ans=a*b; qEl.textContent=`${a} ${op} ${b} = ?`;} c.querySelector('#mstart').onclick=()=>{playing=true;cor=0;tot=0;inp.disabled=false;inp.value='';inp.focus();gen();sEl.textContent='Правильно:0 Всего:0';clearTimeout(timer);timer=setTimeout(()=>{playing=false;inp.disabled=true;sEl.textContent=`Время! Правильно:${cor} Всего:${tot}`;},30000);}; c.querySelector('#ms').onclick=()=>{if(!playing)return; tot++; if(parseInt(inp.value)===ans)cor++; sEl.textContent=`Правильно:${cor} Всего:${tot}`; inp.value='';gen();}; return ()=>clearTimeout(timer); }
+
+  // ---------- 10. Реакция ----------
+  function initReaction(c){ c.innerHTML=`<div id="rbox" style="width:180px;height:180px;background:#ef4444;border-radius:50%;margin:20px auto;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;cursor:pointer;">ЖДИ</div><div class="score" id="rtime">Лучшее: -- мс</div><button id="rstart">Тест</button>`; let best=Infinity,waiting=false,timeout,startTime; const box=c.querySelector('#rbox'),tel=c.querySelector('#rtime'); function reset(){box.style.background='#ef4444';box.textContent='ЖДИ';waiting=true; const d=1000+Math.random()*3000; timeout=setTimeout(()=>{box.style.background='#22c55e';box.textContent='ЖМИ!';waiting=false;startTime=Date.now();},d);} box.onclick=()=>{if(waiting){clearTimeout(timeout);box.textContent='РАНО';box.style.background='#f97316';waiting=false;setTimeout(reset,1500);return;} if(box.textContent==='ЖМИ!'){const rt=Date.now()-startTime; if(rt<best)best=rt; tel.textContent=`${rt} мс | Лучшее: ${best} мс`; box.style.background='#3b82f6';box.textContent=`${rt} мс`; setTimeout(reset,1500);}}; c.querySelector('#rstart').onclick=()=>{best=Infinity;tel.textContent='Лучшее: -- мс';clearTimeout(timeout);reset();}; reset(); return ()=>clearTimeout(timeout); }
+
+  // ---------- 11. Кости ----------
+  function initDice(c){ c.innerHTML=`<div style="font-size:6rem;" id="df">🎲</div><button id="dr">Бросить</button><div class="score" id="dh">История:</div>`; const faces=['⚀','⚁','⚂','⚃','⚄','⚅'],hist=[]; const df=c.querySelector('#df'),dh=c.querySelector('#dh'); c.querySelector('#dr').onclick=()=>{const r=Math.floor(Math.random()*6)+1;df.textContent=faces[r-1];hist.push(r);if(hist.length>10)hist.shift();dh.textContent='История: '+hist.join(', ');}; return ()=>{}; }
+
+  // ---------- 12. Анаграммы ----------
+  function initWordScramble(c){ c.innerHTML=`<p style="font-size:2.5rem;color:#facc15;" id="sw"></p><input id="si" placeholder="ответ"><button id="ss">Проверить</button><div class="score" id="ssc">0</div><button id="sn">Новое</button>`; const words=['программа','клавиатура','монитор','телефон','библиотека','алгоритм','компьютер']; let cur,sc=0; const w=c.querySelector('#sw'),inp=c.querySelector('#si'),scEl=c.querySelector('#ssc'); function scramble(w){return w.split('').sort(()=>Math.random()-0.5).join('');} function newWord(){cur=words[Math.floor(Math.random()*words.length)];w.textContent=scramble(cur).toUpperCase();inp.value='';} c.querySelector('#ss').onclick=()=>{if(inp.value.trim().toLowerCase()===cur){sc++;scEl.textContent=sc+' ✅';newWord();}else scEl.textContent=sc+' ❌';}; c.querySelector('#sn').onclick=newWord; newWord(); return ()=>{}; }
+
+  // ---------- 13. Саймон ----------
+  function initSimon(c){ c.innerHTML=`<div style="display:grid;grid-template-columns:100px 100px;gap:8px;justify-content:center;"><div id="sR" style="width:100px;height:100px;background:#ef4444;border-radius:16px;opacity:0.7;"></div><div id="sG" style="width:100px;height:100px;background:#22c55e;border-radius:16px;opacity:0.7;"></div><div id="sB" style="width:100px;height:100px;background:#3b82f6;border-radius:16px;opacity:0.7;"></div><div id="sY" style="width:100px;height:100px;background:#eab308;border-radius:16px;opacity:0.7;"></div></div><div class="score" id="simSc">Раунд 0</div><button id="simStart">Старт</button>`; const pads={red:'sR',green:'sG',blue:'sB',yellow:'sY'}; let seq=[],player=[],round=0,showing=false; const scEl=c.querySelector('#simSc'); function flash(color){const el=document.getElementById(pads[color]); el.style.opacity='1';el.style.boxShadow='0 0 25px white'; setTimeout(()=>{el.style.opacity='0.7';el.style.boxShadow='none';},300);} function playSeq(){showing=true;player=[];seq.forEach((c,i)=>setTimeout(()=>flash(c),(i+1)*600)); setTimeout(()=>showing=false,seq.length*600+400);} function newRound(){seq.push(Object.keys(pads)[Math.floor(Math.random()*4)]); round=seq.length;scEl.textContent=`Раунд ${round}`;player=[];setTimeout(playSeq,500);} Object.keys(pads).forEach(col=>{document.getElementById(pads[col]).onclick=()=>{if(showing)return;flash(col);player.push(col);const idx=player.length-1; if(player[idx]!==seq[idx]){scEl.textContent=`Ошибка! Итог ${round-1}`;seq=[];round=0;return;} if(player.length===seq.length)setTimeout(newRound,800);}}); c.querySelector('#simStart').onclick=()=>{seq=[];round=0;newRound();}; return ()=>{}; }
+
+  // ---------- 14. Пятнашки ----------
+  function initPuzzle15(c){ c.innerHTML=`<div class="puzzle-grid" id="pg"></div><button id="psh">Перемешать</button><div class="score" id="pm">Ходы:0</div>`; let tiles=[...Array(15).keys()].map(i=>i+1).concat(0),moves=0; const grid=c.querySelector('#pg'),mel=c.querySelector('#pm'); function render(){grid.innerHTML='';tiles.forEach((t,i)=>{const d=document.createElement('div');d.className='tile'+(t===0?' empty':'');d.textContent=t||'';d.onclick=()=>move(i);grid.appendChild(d);});mel.textContent=`Ходы:${moves}`; if(tiles.slice(0,15).every((t,i)=>t===i+1)&&tiles[15]===0&&moves>0)mel.textContent=`Собрано за ${moves}!`;} function move(i){const e=tiles.indexOf(0);const v=[e%4!==0?e-1:null,e%4!==3?e+1:null,e>=4?e-4:null,e<12?e+4:null].filter(v=>v!==null); if(v.includes(i)){[tiles[i],tiles[e]]=[tiles[e],tiles[i]];moves++;render();}} function shuffle(){tiles=[...Array(15).keys()].map(i=>i+1).concat(0); for(let s=0;s<300;s++){const e=tiles.indexOf(0);const v=[e%4!==0?e-1:null,e%4!==3?e+1:null,e>=4?e-4:null,e<12?e+4:null].filter(v=>v!==null); const r=v[Math.floor(Math.random()*v.length)];[tiles[e],tiles[r]]=[tiles[r],tiles[e]];} moves=0;render();} c.querySelector('#psh').onclick=shuffle; render(); return ()=>{}; }
+
+  // ---------- 15. Понг ----------
+  function initPong(c){ c.innerHTML=`<div class="score" id="pSc">Игрок 0 - 0 Комп</div><canvas id="pC" width="500" height="350"></canvas><button id="pR">Заново</button>`; const canvas=c.querySelector('#pC'),ctx=canvas.getContext('2d'),scEl=c.querySelector('#pSc'); let pad={x:20,y:135,w:10,h:80},cpu={x:470,y:135,w:10,h:80},ball={x:250,y:175,r:8,vx:4,vy:3},pSc=0,cSc=0,over=false,interval; function step(){ball.x+=ball.vx;ball.y+=ball.vy; if(ball.y<0||ball.y>350)ball.vy*=-1; if(ball.x<30&&ball.y>pad.y&&ball.y<pad.y+80)ball.vx*=-1.05; if(ball.x>470&&ball.y>cpu.y&&ball.y<cpu.y+80)ball.vx*=-1.05; if(ball.x<0){cSc++;reset();} if(ball.x>500){pSc++;reset();} cpu.y+=(ball.y-(cpu.y+40))*0.05; cpu.y=Math.max(0,Math.min(270,cpu.y)); scEl.textContent=`Игрок ${pSc} - ${cSc} Комп`; draw();} function reset(){ball={x:250,y:175,r:8,vx:(Math.random()>0.5?4:-4),vy:(Math.random()-0.5)*6};} function draw(){ctx.fillStyle='#111';ctx.fillRect(0,0,500,350);ctx.fillStyle='#fff';ctx.fillRect(pad.x,pad.y,10,80);ctx.fillRect(cpu.x,cpu.y,10,80);ctx.beginPath();ctx.arc(ball.x,ball.y,8,0,Math.PI*2);ctx.fill();} canvas.onmousemove=e=>{const rect=canvas.getBoundingClientRect();pad.y=(e.clientY-rect.top)*(350/rect.height)-40;pad.y=Math.max(0,Math.min(270,pad.y));}; c.querySelector('#pR').onclick=()=>{pSc=0;cSc=0;reset();scEl.textContent='Игрок 0 - 0 Комп';}; interval=setInterval(step,16); draw(); return ()=>clearInterval(interval); }
+
+  // ---------- 16. Брейкаут ----------
+  function initBreakout(c){ c.innerHTML=`<div class="score" id="brSc">0</div><canvas id="brC" width="400" height="400"></canvas><button id="brR">Заново</button>`; const canvas=c.querySelector('#brC'),ctx=canvas.getContext('2d'),scEl=c.querySelector('#brSc'); let pad={x:150,y:370,w:80,h:12},ball={x:200,y:350,r:7,vx:3,vy:-3},bricks=[],score=0,interval; function initB(){bricks=[];for(let r=0;r<5;r++)for(let c=0;c<7;c++)bricks.push({x:c*55+15,y:r*25+30,w:48,h:18,alive:true});} function step(){ball.x+=ball.vx;ball.y+=ball.vy; if(ball.x<0||ball.x>400)ball.vx*=-1; if(ball.y<0)ball.vy*=-1; if(ball.y+7>pad.y&&ball.y<pad.y+12&&ball.x>pad.x&&ball.x<pad.x+80)ball.vy=-Math.abs(ball.vy); bricks.forEach(b=>{if(b.alive&&ball.x>b.x&&ball.x<b.x+48&&ball.y>b.y&&ball.y<b.y+18){b.alive=false;ball.vy*=-1;score+=10;}}); if(ball.y>400){clearInterval(interval);scEl.textContent=`Конец: ${score}`;} if(bricks.every(b=>!b.alive)){clearInterval(interval);scEl.textContent=`Победа: ${score}`;} scEl.textContent=score; draw();} function draw(){ctx.fillStyle='#111';ctx.fillRect(0,0,400,400);ctx.fillStyle='#fff';ctx.fillRect(pad.x,pad.y,80,12);ctx.beginPath();ctx.arc(ball.x,ball.y,7,0,Math.PI*2);ctx.fill(); const cols=['#ef4444','#f97316','#eab308','#22c55e','#3b82f6']; bricks.forEach((b,i)=>{if(b.alive){ctx.fillStyle=cols[Math.floor(i/7)];ctx.fillRect(b.x,b.y,48,18);}});} canvas.onmousemove=e=>{const rect=canvas.getBoundingClientRect();pad.x=(e.clientX-rect.left)*(400/rect.width)-40;pad.x=Math.max(0,Math.min(320,pad.x));}; c.querySelector('#brR').onclick=()=>{clearInterval(interval);score=0;ball={x:200,y:350,r:7,vx:3,vy:-3};initB();scEl.textContent='0';interval=setInterval(step,16);}; initB(); interval=setInterval(step,16); draw(); return ()=>clearInterval(interval); }
+
+  // ---------- 17. Flappy Bird ----------
+  function initFlappy(c){ c.innerHTML=`<div class="score" id="flSc">0</div><canvas id="flC" width="350" height="450"></canvas><button id="flR">Заново</button>`; const canvas=c.querySelector('#flC'),ctx=canvas.getContext('2d'),scEl=c.querySelector('#flSc'); let bird={x:80,y:200,r:14,vy:0},pipes=[],score=0,over=false,interval,frame=0; function step(){if(over)return;frame++;bird.vy+=0.4;bird.y+=bird.vy; if(frame%90===0){const gap=120,top=40+Math.random()*(450-gap-80);pipes.push({x:350,top,bottom:top+gap,passed:false});} pipes.forEach(p=>p.x-=2.5); pipes=pipes.filter(p=>p.x>-60); pipes.forEach(p=>{if(!p.passed&&p.x+40<80){p.passed=true;score++;} if(bird.x+14>p.x&&bird.x-14<p.x+40&&(bird.y-14<p.top||bird.y+14>p.bottom))over=true;}); if(bird.y+14>450||bird.y-14<0)over=true; scEl.textContent=over?`Конец: ${score}`:score; draw();} function draw(){ctx.fillStyle='#4dc9f6';ctx.fillRect(0,0,350,450);ctx.fillStyle='#facc15';ctx.beginPath();ctx.arc(bird.x,bird.y,14,0,Math.PI*2);ctx.fill();ctx.fillStyle='#22c55e'; pipes.forEach(p=>{ctx.fillRect(p.x,0,40,p.top);ctx.fillRect(p.x,p.bottom,40,450-p.bottom);});} canvas.onclick=()=>{if(!over)bird.vy=-7;}; document.addEventListener('keydown',function fk(e){if(e.code==='Space'&&!over){e.preventDefault();bird.vy=-7;}}); c.querySelector('#flR').onclick=()=>{bird={x:80,y:200,r:14,vy:0};pipes=[];score=0;over=false;frame=0;scEl.textContent='0';}; interval=setInterval(step,16); draw(); return ()=>clearInterval(interval); }
+
+  // ---------- 18. Космо-стрелялка ----------
+  function initShooter(c){ c.innerHTML=`<div class="score" id="ssSc">0</div><canvas id="ssC" width="400" height="500"></canvas><button id="ssR">Заново</button>`; const canvas=c.querySelector('#ssC'),ctx=canvas.getContext('2d'),scEl=c.querySelector('#ssSc'); let player={x:180,y:430,w:35,h:35},bullets=[],enemies=[],score=0,over=false,interval,frame=0; function step(){if(over)return;frame++;if(frame%30===0)enemies.push({x:Math.random()*365,y:-30,w:28,h:28}); bullets.forEach(b=>b.y-=7);enemies.forEach(e=>e.y+=2.5); bullets.forEach(b=>{enemies.forEach(e=>{if(!e.hit&&b.x>e.x&&b.x<e.x+28&&b.y>e.y&&b.y<e.y+28){e.hit=true;b.hit=true;score+=10;}});}); bullets=bullets.filter(b=>!b.hit&&b.y>0);enemies=enemies.filter(e=>!e.hit&&e.y<500); if(enemies.some(e=>e.x<player.x+35&&e.x+28>player.x&&e.y<430+35&&e.y+28>430))over=true; scEl.textContent=over?`Конец: ${score}`:score; draw();} function draw(){ctx.fillStyle='#000';ctx.fillRect(0,0,400,500);ctx.fillStyle='#3b82f6';ctx.fillRect(player.x,player.y,35,35);ctx.fillStyle='#facc15';bullets.forEach(b=>ctx.fillRect(b.x,b.y,3,10));ctx.fillStyle='#ef4444';enemies.forEach(e=>ctx.fillRect(e.x,e.y,28,28));} canvas.onmousemove=e=>{const rect=canvas.getBoundingClientRect();player.x=(e.clientX-rect.left)*(400/rect.width)-17;player.x=Math.max(0,Math.min(365,player.x));}; canvas.onclick=()=>{if(!over)bullets.push({x:player.x+16,y:player.y,hit:false});}; c.querySelector('#ssR').onclick=()=>{player={x:180,y:430,w:35,h:35};bullets=[];enemies=[];score=0;over=false;frame=0;scEl.textContent='0';}; interval=setInterval(step,16); draw(); return ()=>clearInterval(interval); }
+
+  // ---------- 19. Сапёр ----------
+  function initMinesweeper(c){ c.innerHTML=`<div class="score" id="msSt">🚩10</div><div class="minesweeper-grid" id="msG"></div><button id="msR">Заново</button>`; const size=8,mines=10; let board,revealed,flagged,over; const grid=c.querySelector('#msG'),st=c.querySelector('#msSt'); function init(){board=Array(size).fill().map(()=>Array(size).fill(0)); revealed=Array(size).fill().map(()=>Array(size).fill(false)); flagged=Array(size).fill().map(()=>Array(size).fill(false)); over=false; let p=0;while(p<mines){const r=Math.floor(Math.random()*size),c=Math.floor(Math.random()*size);if(board[r][c]!=='M'){board[r][c]='M';p++;}} for(let r=0;r<size;r++)for(let c=0;c<size;c++)if(board[r][c]!=='M'){let cnt=0;for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<size&&nc>=0&&nc<size&&board[nr][nc]==='M')cnt++;} board[r][c]=cnt;} render();} function reveal(r,c){if(over||revealed[r][c]||flagged[r][c])return; revealed[r][c]=true; if(board[r][c]==='M'){over=true;revealAll();}else if(board[r][c]===0){for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<size&&nc>=0&&nc<size&&!revealed[nr][nc])reveal(nr,nc);}} render();} function revealAll(){for(let r=0;r<size;r++)for(let c=0;c<size;c++)revealed[r][c]=true;render();} function render(){grid.innerHTML='';const fc=flagged.flat().filter(f=>f).length; st.textContent=over?'💥':`🚩${mines-fc}`; for(let r=0;r<size;r++)for(let c=0;c<size;c++){const cell=document.createElement('div');cell.className='cell';if(revealed[r][c]){cell.classList.add('revealed');cell.textContent=board[r][c]==='M'?'💣':board[r][c]||'';}else if(flagged[r][c])cell.classList.add('flagged'); cell.onclick=()=>reveal(r,c); cell.oncontextmenu=e=>{e.preventDefault();if(!revealed[r][c]&&!over){flagged[r][c]=!flagged[r][c];render();}}; grid.appendChild(cell);}} c.querySelector('#msR').onclick=init; init(); return ()=>{}; }
+
+  // ---------- 20. 4 в ряд ----------
+  function initConnect4(c){ c.innerHTML=`<div class="score" id="c4st">Ход 🔴</div><div class="connect4-grid" id="c4g"></div><button id="c4r">Заново</button>`; const rows=6,cols=7; let board,cur,over; const grid=c.querySelector('#c4g'),st=c.querySelector('#c4st'); function init(){board=Array(rows).fill().map(()=>Array(cols).fill(null));cur='red';over=false;render();} function drop(col){if(over)return;for(let r=rows-1;r>=0;r--){if(!board[r][col]){board[r][col]=cur;if(checkWin(r,col)){over=true;st.textContent=`Победил ${cur==='red'?'🔴':'🟡'}!`;}else if(board[0].every(c=>c)){over=true;st.textContent='Ничья!';}else{cur=cur==='red'?'yellow':'red';st.textContent=`Ход ${cur==='red'?'🔴':'🟡'}`;} render();return;}}} function checkWin(r,c){const dirs=[[0,1],[1,0],[1,1],[1,-1]]; return dirs.some(([dr,dc])=>{let cnt=1;for(let i=1;i<4;i++){const nr=r+dr*i,nc=c+dc*i;if(nr>=0&&nr<rows&&nc>=0&&nc<cols&&board[nr][nc]===cur)cnt++;else break;} for(let i=1;i<4;i++){const nr=r-dr*i,nc=c-dc*i;if(nr>=0&&nr<rows&&nc>=0&&nc<cols&&board[nr][nc]===cur)cnt++;else break;} return cnt>=4;});} function render(){grid.innerHTML='';for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const s=document.createElement('div');s.className='slot';if(board[r][c])s.classList.add(board[r][c]);s.onclick=()=>drop(c);grid.appendChild(s);}} c.querySelector('#c4r').onclick=init; init(); return ()=>{}; }
+
+  // ---------- 21. Монетка ----------
+  function initCoinFlip(c){ c.innerHTML=`<div style="font-size:8rem;" id="cf">🪙</div><button id="cfb">Подбросить</button><div class="score" id="cfs">Орёл:0 Решка:0</div>`; let h=0,t=0; c.querySelector('#cfb').onclick=()=>{const r=Math.random()<0.5;c.querySelector('#cf').textContent=r?'🦅':'🪙'; if(r)h++;else t++; c.querySelector('#cfs').textContent=`Орёл:${h} Решка:${t}`;}; return ()=>{}; }
+
+  // ---------- 22. Клик-тест ----------
+  function initClickSpeed(c){ c.innerHTML=`<div id="clA" style="width:180px;height:180px;background:var(--accent);border-radius:50%;margin:15px auto;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;cursor:pointer;">КЛИКАЙ</div><div class="score" id="clS">0 кликов, 10с</div><button id="clStart">Старт</button>`; let clicks=0,left=10,playing=false,interval; const area=c.querySelector('#clA'),sc=c.querySelector('#clS'); area.onclick=()=>{if(playing){clicks++;sc.textContent=`${clicks} кликов, ${left}с`;}}; c.querySelector('#clStart').onclick=()=>{clicks=0;left=10;playing=true;sc.textContent='0 кликов, 10с';clearInterval(interval); interval=setInterval(()=>{left--;if(left<=0){clearInterval(interval);playing=false;sc.textContent=`Финиш: ${clicks} (${(clicks/10).toFixed(1)}/с)`;}else sc.textContent=`${clicks} кликов, ${left}с`;},1000);}; return ()=>clearInterval(interval); }
+
+  // ---------- 23. Лабиринт ----------
+  function initMaze(c){ c.innerHTML=`<canvas id="mzC" width="400" height="400"></canvas><div class="score" id="mzM">Дойди до зелёного</div><button id="mzN">Новый</button>`; const canvas=c.querySelector('#mzC'),ctx=canvas.getContext('2d'),msg=c.querySelector('#mzM'); const cell=25,cols=16,rows=16; let maze,player,exit,won; function gen(){maze=Array(rows).fill().map(()=>Array(cols).fill(1)); let stack=[{x:1,y:1}];maze[1][1]=0; while(stack.length){const {x,y}=stack[stack.length-1]; const n=[[x-2,y],[x+2,y],[x,y-2],[x,y+2]].filter(([nx,ny])=>nx>0&&nx<cols-1&&ny>0&&ny<rows-1&&maze[ny][nx]===1); if(n.length){const [nx,ny]=n[Math.floor(Math.random()*n.length)];maze[ny][nx]=0;maze[y+(ny-y)/2][x+(nx-x)/2]=0;stack.push({x:nx,y:ny});}else stack.pop();} player={x:1,y:1};exit={x:cols-2,y:rows-2};maze[exit.y][exit.x]=0;won=false;msg.textContent='Дойди до зелёного';draw();} function draw(){ctx.fillStyle='#111';ctx.fillRect(0,0,400,400); for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)if(maze[r][c]===1){ctx.fillStyle='#333';ctx.fillRect(c*cell,r*cell,cell,cell);} ctx.fillStyle='#22c55e';ctx.fillRect(exit.x*cell+4,exit.y*cell+4,cell-8,cell-8); ctx.fillStyle='#3b82f6';ctx.beginPath();ctx.arc(player.x*cell+12.5,player.y*cell+12.5,8,0,2*Math.PI);ctx.fill(); if(won){ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(0,0,400,400);ctx.fillStyle='#fff';ctx.font='24px sans-serif';ctx.fillText('ПОБЕДА',120,200);}} document.addEventListener('keydown',function mk(e){if(won)return;const map={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}; if(map[e.key]){e.preventDefault();const[dx,dy]=map[e.key];const nx=player.x+dx,ny=player.y+dy; if(nx>=0&&nx<cols&&ny>=0&&ny<rows&&maze[ny][nx]===0){player.x=nx;player.y=ny;} if(player.x===exit.x&&player.y===exit.y){won=true;msg.textContent='Выбрался!';} draw();}}); c.querySelector('#mzN').onclick=gen; gen(); return ()=>{}; }
+
+  // ---------- 24. Doodle Jump ----------
+  function initDoodle(c){ c.innerHTML=`<div class="score" id="djS">0</div><canvas id="djC" width="350" height="500"></canvas><button id="djR">Заново</button>`; const canvas=c.querySelector('#djC'),ctx=canvas.getContext('2d'),scEl=c.querySelector('#djS'); let player={x:160,y:250,w:30,h:30,vy:0},platforms=[],score=0,over=false,interval; function initP(){platforms=[{x:140,y:400,w:70,h:10}]; for(let i=0;i<8;i++)platforms.push({x:Math.random()*280,y:i*55,w:65,h:10});} function step(){if(over)return;player.vy+=0.4;player.y+=player.vy; platforms.forEach(p=>{if(player.vy>0&&player.y+30>=p.y&&player.y+30<=p.y+10&&player.x+30>p.x&&player.x<p.x+70){player.vy=-9;score+=10;}}); if(player.y<200){const diff=200-player.y;player.y=200;platforms.forEach(p=>p.y+=diff);platforms=platforms.filter(p=>p.y<500); while(platforms.length<8)platforms.push({x:Math.random()*280,y:Math.min(...platforms.map(p=>p.y))-55,w:65,h:10});} if(player.y>500)over=true; scEl.textContent=over?`Конец: ${score}`:score; draw();} function draw(){ctx.fillStyle='#e8f4f8';ctx.fillRect(0,0,350,500);ctx.fillStyle='#22c55e'; platforms.forEach(p=>ctx.fillRect(p.x,p.y,p.w,p.h));ctx.fillStyle='#ef4444';ctx.fillRect(player.x,player.y,30,30);} document.addEventListener('keydown',function dk(e){if(e.key==='ArrowLeft')player.x-=20;if(e.key==='ArrowRight')player.x+=20; player.x=Math.max(0,Math.min(320,player.x));}); c.querySelector('#djR').onclick=()=>{player={x:160,y:250,w:30,h:30,vy:0};score=0;over=false;initP();scEl.textContent='0';}; initP(); interval=setInterval(step,16); draw(); return ()=>clearInterval(interval); }
+
+  // ---------- 25. Башня ----------
+  function initTower(c){ c.innerHTML=`<div class="score" id="tbS">Блоков:1</div><canvas id="tbC" width="300" height="450"></canvas><button id="tbR">Заново</button>`; const canvas=c.querySelector('#tbC'),ctx=canvas.getContext('2d'),scEl=c.querySelector('#tbS'); let blocks=[{x:50,y:420,w:200,h:20}],curBlock={x:50,y:400,w:200,h:20,moving:true,dir:1,speed:3},over=false,interval; function step(){if(over)return;if(curBlock.moving){curBlock.x+=curBlock.speed*curBlock.dir;if(curBlock.x+curBlock.w>300||curBlock.x<0)curBlock.dir*=-1;} draw();} function drop(){if(!curBlock.moving||over)return;curBlock.moving=false;const last=blocks[0];const ol=Math.max(curBlock.x,last.x),or=Math.min(curBlock.x+curBlock.w,last.x+last.w),ow=or-ol; if(ow<=0){over=true;scEl.textContent=`Промах! Блоков:${blocks.length}`;draw();return;} curBlock.x=ol;curBlock.w=ow;curBlock.y=last.y-20;blocks.unshift(curBlock); curBlock={x:50,y:blocks[0].y-20,w:blocks[0].w,h:20,moving:true,dir:Math.random()>0.5?1:-1,speed:2+blocks.length*0.3}; scEl.textContent=`Блоков:${blocks.length}`;draw();} function draw(){ctx.fillStyle='#1a1a3e';ctx.fillRect(0,0,300,450);blocks.forEach((b,i)=>{ctx.fillStyle=`hsl(${i*25},70%,55%)`;ctx.fillRect(b.x,b.y,b.w,b.h);}); if(curBlock.moving){ctx.fillStyle='#facc15';ctx.fillRect(curBlock.x,curBlock.y,curBlock.w,curBlock.h);} if(over){ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText('GAME OVER',60,200);}} canvas.onclick=drop; c.querySelector('#tbR').onclick=()=>{blocks=[{x:50,y:420,w:200,h:20}];curBlock={x:50,y:400,w:200,h:20,moving:true,dir:1,speed:3};over=false;scEl.textContent='Блоков:1';}; interval=setInterval(step,16); draw(); return ()=>clearInterval(interval); }
+
+  // ---------- 26. Лови предметы ----------
+  function initCatch(c){ c.innerHTML=`<div class="score" id="cfS">0</div><canvas id="cfC" width="400" height="450"></canvas><button id="cfR">Заново</button>`; const canvas=c.querySelector('#cfC'),ctx=canvas.getContext('2d'),scEl=c.querySelector('#cfS'); let basket={x:160,w:80,h:20,y:410},items=[],score=0,over=false,interval,frame=0; function step(){if(over)return;frame++;if(frame%25===0)items.push({x:Math.random()*380,y:-20,r:12,sp:2+Math.random()*2}); items.forEach(i=>i.y+=i.sp); items.forEach(i=>{if(i.y+i.r>=410&&i.y-i.r<=430&&i.x>basket.x&&i.x<basket.x+80){i.caught=true;score+=5;}}); items=items.filter(i=>!i.caught&&i.y<470); if(items.some(i=>i.y>450&&!i.caught))over=true; scEl.textContent=over?`Конец: ${score}`:score; draw();} function draw(){ctx.fillStyle='#1a1a3e';ctx.fillRect(0,0,400,450);ctx.fillStyle='#facc15';ctx.fillRect(basket.x,basket.y,80,20);ctx.fillStyle='#ef4444'; items.forEach(i=>{ctx.beginPath();ctx.arc(i.x,i.y,12,0,2*Math.PI);ctx.fill();});} canvas.onmousemove=e=>{const rect=canvas.getBoundingClientRect();basket.x=(e.clientX-rect.left)*(400/rect.width)-40;basket.x=Math.max(0,Math.min(320,basket.x));}; c.querySelector('#cfR').onclick=()=>{items=[];score=0;over=false;frame=0;scEl.textContent='0';}; interval=setInterval(step,16); draw(); return ()=>clearInterval(interval); }
+
+  // ---------- 27. Тренажёр AIM ----------
+  function initAim(c){ c.innerHTML=`<div class="score" id="aimS">0|0</div><canvas id="aimC" width="400" height="400"></canvas><button id="aimR">Заново</button>`; const canvas=c.querySelector('#aimC'),ctx=canvas.getContext('2d'),scEl=c.querySelector('#aimS'); let target={x:200,y:200,r:25},hits=0,miss=0,time=30,playing=true,interval; function step(){if(!playing)return;draw();} function draw(){ctx.fillStyle='#1a1a3e';ctx.fillRect(0,0,400,400);ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(target.x,target.y,target.r,0,2*Math.PI);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(target.x,target.y,target.r-8,0,2*Math.PI);ctx.fill();ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(target.x,target.y,5,0,2*Math.PI);ctx.fill();ctx.fillStyle='#fff';ctx.font='16px sans-serif';ctx.fillText(`Время:${time}с`,10,25);} canvas.onclick=e=>{if(!playing)return;const rect=canvas.getBoundingClientRect();const mx=(e.clientX-rect.left)*(400/rect.width),my=(e.clientY-rect.top)*(400/rect.height); if(Math.hypot(mx-target.x,my-target.y)<target.r){hits++;target={x:30+Math.random()*340,y:30+Math.random()*340,r:20+Math.random()*20};}else miss++; scEl.textContent=`${hits} | ${miss}`;}; interval=setInterval(()=>{time--;if(time<=0){playing=false;scEl.textContent=`Финиш: ${hits}/${miss} (${hits+miss?Math.round(hits/(hits+miss)*100):0}%)`;clearInterval(interval);}},1000); c.querySelector('#aimR').onclick=()=>{hits=0;miss=0;time=30;playing=true;target={x:200,y:200,r:25};scEl.textContent='0|0';clearInterval(interval);interval=setInterval(()=>{time--;if(time<=0){playing=false;scEl.textContent=`Финиш: ${hits}/${miss}`;clearInterval(interval);}},1000);}; draw(); return ()=>clearInterval(interval); }
+
+  // ---------- 28. Лопай пузыри ----------
+  function initBubble(c){ c.innerHTML=`<div class="score" id="bpS">0</div><canvas id="bpC" width="400" height="450"></canvas><button id="bpR">Заново</button>`; const canvas=c.querySelector('#bpC'),ctx=canvas.getContext('2d'),scEl=c.querySelector('#bpS'); let bubbles=[],popped=0,interval; function spawn(){bubbles.push({x:Math.random()*400,y:470,r:15+Math.random()*30,vy:-1-Math.random()*2,color:`hsl(${Math.random()*360},70%,60%)`});} function step(){bubbles.forEach(b=>b.y+=b.vy);bubbles=bubbles.filter(b=>b.y+b.r>0);if(bubbles.length<15&&Math.random()<0.05)spawn();draw();} function draw(){ctx.fillStyle='#0a0a2a';ctx.fillRect(0,0,400,450);bubbles.forEach(b=>{ctx.fillStyle=b.color;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,2*Math.PI);ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=2;ctx.stroke();});ctx.fillStyle='#fff';ctx.fillText(`Лопнуто:${popped}`,10,25);} canvas.onclick=e=>{const rect=canvas.getBoundingClientRect();const mx=(e.clientX-rect.left)*(400/rect.width),my=(e.clientY-rect.top)*(450/rect.height); for(let i=bubbles.length-1;i>=0;i--){if(Math.hypot(mx-bubbles[i].x,my-bubbles[i].y)<bubbles[i].r){bubbles.splice(i,1);popped++;scEl.textContent=popped;break;}}}; c.querySelector('#bpR').onclick=()=>{bubbles=[];popped=0;scEl.textContent='0';}; for(let i=0;i<10;i++)spawn(); interval=setInterval(step,16); draw(); return ()=>clearInterval(interval); }
+
+  // ---------- 29. МОРСКОЙ БОЙ (исправленная расстановка) ----------
+  function initBattle(c){ c.innerHTML=`
+    <div class="mode-select" id="bsMode"><p>Выберите режим:</p><button id="bsBot">🤖 С ботом</button><button id="bsTwo">👥 Вдвоём</button></div>
+    <div id="bsPlacement" style="display:none;"><div class="score" id="bsPlaceMsg"></div>
+      <div style="margin:10px 0;"><button id="bsRotate">↔️ Поворот (R)</button></div>
+      <div class="ship-select" id="bsShips"></div>
+      <div class="battleship-grid" id="bsPlaceGrid"></div>
+      <button id="bsPlaceDone" style="display:none;">Готово</button>
+    </div>
+    <div id="bsGame" style="display:none;"><div class="score" id="bsStatus"></div><div class="battleship-container"><div class="board-wrapper"><div class="board-title">Твоё поле</div><div class="battleship-grid" id="bsMy"></div></div><div class="board-wrapper"><div class="board-title" id="bsOppTitle">Поле врага</div><div class="battleship-grid" id="bsOpp"></div></div></div><button id="bsRestart">Новая игра</button></div>
+    <div id="bsOverlay" class="overlay" style="display:none;"><div class="overlay-content"><p id="bsOverlayMsg"></p><button id="bsOverlayBtn">ОК</button></div></div>
+  `;
+  const modeDiv=c.querySelector('#bsMode'),placeDiv=c.querySelector('#bsPlacement'),gameDiv=c.querySelector('#bsGame'),overlay=c.querySelector('#bsOverlay');
+  let mode=null, player1Board=[], player2Board=[], p1Hits=[], p2Hits=[], currentPlayer=1, gameOver=false, phase='mode';
+  const ships=[4,3,3,2,2,2,1,1,1,1];
+  let placingBoard=[], placingShips=[], placeIndex=0, orientation='h', placePlayer=0;
+  function emptyBoard(){return Array(10).fill().map(()=>Array(10).fill(0));}
+  function emptyHits(){return Array(10).fill().map(()=>Array(10).fill(null));}
+  function canPlace(board,r,c,len,dir){
+    if(dir==='h'){if(c+len>10)return false; for(let i=-1;i<=1;i++)for(let j=-1;j<=len;j++){const rr=r+i,cc=c+j; if(rr>=0&&rr<10&&cc>=0&&cc<10&&board[rr][cc]===1)return false;}}
+    else{if(r+len>10)return false; for(let i=-1;i<=len;i++)for(let j=-1;j<=1;j++){const rr=r+i,cc=c+j; if(rr>=0&&rr<10&&cc>=0&&cc<10&&board[rr][cc]===1)return false;}}
+    return true;
+  }
+  function placeShip(board,r,c,len,dir){if(dir==='h')for(let i=0;i<len;i++)board[r][c+i]=1; else for(let i=0;i<len;i++)board[r+i][c]=1;}
+  function renderPlacement(){
+    const grid=c.querySelector('#bsPlaceGrid'); grid.innerHTML='';
+    for(let r=0;r<10;r++)for(let c=0;c<10;c++){
+      const cell=document.createElement('div');cell.className='battleship-cell';
+      if(placingBoard[r][c]===1)cell.classList.add('ship');
+      cell.classList.add('placeable');
+      cell.addEventListener('mouseenter',()=>{if(placeIndex<placingShips.length)preview(r,c);});
+      cell.addEventListener('mouseleave',clearPreview);
+      cell.addEventListener('click',()=>{if(placeIndex<placingShips.length)tryPlace(r,c);});
+      grid.appendChild(cell);
+    }
+  }
+  function preview(r,c){
+    const len=placingShips[placeIndex];clearPreview();
+    if(canPlace(placingBoard,r,c,len,orientation)){
+      const cells=c.querySelectorAll('#bsPlaceGrid .battleship-cell');
+      if(orientation==='h')for(let i=0;i<len;i++)cells[r*10+c+i]?.classList.add('preview');
+      else for(let i=0;i<len;i++)cells[(r+i)*10+c]?.classList.add('preview');
+    }
+  }
+  function clearPreview(){c.querySelectorAll('#bsPlaceGrid .preview').forEach(el=>el.classList.remove('preview'));}
+  function tryPlace(r,c){
+    const len=placingShips[placeIndex];
+    if(canPlace(placingBoard,r,c,len,orientation)){
+      placeShip(placingBoard,r,c,len,orientation);placeIndex++;
+      c.querySelector('#bsPlaceMsg').textContent=`Разместите корабль ${placeIndex+1}/${placingShips.length} (длина ${placingShips[placeIndex]||'?'})`;
+      renderPlacement();
+      if(placeIndex>=placingShips.length){c.querySelector('#bsPlaceDone').style.display='inline-block';}
+    }
+  }
+  c.querySelector('#bsRotate').onclick=()=>{orientation=orientation==='h'?'v':'h'; renderPlacement();};
+  function startPlacement(player){
+    phase='placement';placePlayer=player;placingBoard=emptyBoard();placingShips=[...ships];placeIndex=0;orientation='h';
+    modeDiv.style.display='none';placeDiv.style.display='block';gameDiv.style.display='none';
+    c.querySelector('#bsPlaceMsg').textContent=`Игрок ${player}, разместите корабль 1 (длина ${ships[0]})`;
+    c.querySelector('#bsPlaceDone').style.display='none';
+    const shipSel=c.querySelector('#bsShips'); shipSel.innerHTML='';
+    ships.forEach((len,i)=>{const b=document.createElement('button');b.textContent=`🚢 ${len}`;b.className='ship-btn';b.onclick=()=>{placeIndex=i;c.querySelector('#bsPlaceMsg').textContent=`Выберите позицию для корабля ${i+1} (длина ${len})`;renderPlacement();};shipSel.appendChild(b);});
+    renderPlacement();
+  }
+  c.querySelector('#bsPlaceDone').onclick=()=>{
+    if(placePlayer===1){player1Board=placingBoard; if(mode==='bot'){startGame();}else{showOverlay('Передайте устройство Игроку 2',()=>startPlacement(2));}}
+    else{player2Board=placingBoard;startGame();}
+  };
+  function showOverlay(msg,callback){overlay.style.display='flex';c.querySelector('#bsOverlayMsg').textContent=msg; c.querySelector('#bsOverlayBtn').onclick=()=>{overlay.style.display='none';callback();};}
+  function startGame(){
+    if(mode==='bot'){player2Board=emptyBoard(); ships.forEach(len=>{let placed=false;while(!placed){const r=Math.floor(Math.random()*10),c=Math.floor(Math.random()*10),d=Math.random()<0.5?'h':'v'; if(canPlace(player2Board,r,c,len,d)){placeShip(player2Board,r,c,len,d);placed=true;}}});}
+    p1Hits=emptyHits();p2Hits=emptyHits();currentPlayer=1;gameOver=false;phase='game';
+    placeDiv.style.display='none';gameDiv.style.display='block';
+    renderGame();c.querySelector('#bsStatus').textContent='Ход: Игрок 1';
+    if(mode==='bot'&&currentPlayer===2)botMove();
+  }
+  function renderGame(){
+    renderGrid(c.querySelector('#bsMy'),player1Board,p2Hits,true);
+    renderGrid(c.querySelector('#bsOpp'),player2Board,p1Hits,false,currentPlayer===1&&!gameOver,(r,c)=>playerMove(r,c));
+    c.querySelector('#bsOppTitle').textContent=mode==='bot'?'Поле бота':'Поле Игрока 2';
+    if(gameOver){c.querySelector('#bsStatus').textContent=winner===1?'Победил Игрок 1!': (mode==='bot'?'Победил бот':'Победил Игрок 2');}
+  }
+  function renderGrid(el,shipBoard,hitBoard,showShips,clickable,onClick){
+    el.innerHTML='';for(let r=0;r<10;r++)for(let c=0;c<10;c++){
+      const cell=document.createElement('div');cell.className='battleship-cell';
+      if(showShips&&shipBoard[r][c]===1)cell.classList.add('ship');
+      if(hitBoard[r][c]===true){cell.classList.add('hit');cell.textContent='✖';}
+      else if(hitBoard[r][c]===false){cell.classList.add('miss');cell.textContent='·';}
+      if(clickable&&hitBoard[r][c]===null){cell.classList.add('clickable');cell.onclick=()=>onClick(r,c);}
+      el.appendChild(cell);
+    }
+  }
+  function playerMove(r,c){
+    if(gameOver||currentPlayer!==1||p1Hits[r][c]!==null)return;
+    const hit=player2Board[r][c]===1;p1Hits[r][c]=hit;
+    renderGame();
+    if(checkWin(player2Board,p1Hits)){gameOver=true;winner=1;renderGame();return;}
+    if(!hit){currentPlayer=2;c.querySelector('#bsStatus').textContent=mode==='bot'?'Ход бота':'Ход: Игрок 2';
+      if(mode==='two'){showOverlay('Передайте устройство Игроку 2',()=>{renderGame();});}
+      else{renderGame();botMove();}
+    }
+  }
+  function botMove(){
+    if(gameOver||mode!=='bot'||currentPlayer!==2)return;
+    const avail=[];for(let r=0;r<10;r++)for(let c=0;c<10;c++)if(p2Hits[r][c]===null)avail.push({r,c});
+    if(avail.length===0)return;
+    const {r,c}=avail[Math.floor(Math.random()*avail.length)];
+    const hit=player1Board[r][c]===1;p2Hits[r][c]=hit;
+    renderGame();c.querySelector('#bsStatus').textContent='Ход бота...';
+    if(checkWin(player1Board,p2Hits)){gameOver=true;winner=2;renderGame();return;}
+    if(hit){setTimeout(botMove,500);}else{currentPlayer=1;c.querySelector('#bsStatus').textContent='Ваш ход';renderGame();}
+  }
+  function checkWin(shipBoard,hitBoard){return shipBoard.every((row,r)=>row.every((cell,c)=>cell===0||hitBoard[r][c]===true));}
+  c.querySelector('#bsBot').onclick=()=>{mode='bot';startPlacement(1);};
+  c.querySelector('#bsTwo').onclick=()=>{mode='two';startPlacement(1);};
+  c.querySelector('#bsRestart').onclick=()=>{phase='mode';modeDiv.style.display='block';placeDiv.style.display='none';gameDiv.style.display='none';overlay.style.display='none';};
+  return ()=>{};
+  }
+
+  // ---------- 30. 2048 ----------
+  function init2048(c){ c.innerHTML=`<div class="score" id="g2048sc">0</div><div style="display:grid;grid-template-columns:repeat(4,70px);gap:6px;justify-content:center;margin:15px auto;" id="g2048g"></div><button id="g2048r">Новая игра</button>`; let board,score,over; const grid=c.querySelector('#g2048g'),scEl=c.querySelector('#g2048sc'); function init(){board=Array(4).fill().map(()=>Array(4).fill(0));score=0;over=false;addRandom();addRandom();render();} function addRandom(){const empty=[];for(let r=0;r<4;r++)for(let c=0;c<4;c++)if(board[r][c]===0)empty.push({r,c}); if(empty.length){const {r,c}=empty[Math.floor(Math.random()*empty.length)];board[r][c]=Math.random()<0.9?2:4;}} function move(dir){if(over)return false;let moved=false;const old=board.map(row=>[...row]); if(dir==='left'||dir==='right'){for(let r=0;r<4;r++){let row=board[r].filter(v=>v); if(dir==='right')row.reverse(); for(let i=0;i<row.length-1;i++){if(row[i]&&row[i]===row[i+1]){row[i]*=2;score+=row[i];row[i+1]=0;}} row=row.filter(v=>v); while(row.length<4)dir==='left'?row.push(0):row.unshift(0); if(dir==='right')row.reverse(); board[r]=row;}} else{for(let c=0;c<4;c++){let col=board.map(r=>r[c]).filter(v=>v); if(dir==='down')col.reverse(); for(let i=0;i<col.length-1;i++){if(col[i]&&col[i]===col[i+1]){col[i]*=2;score+=col[i];col[i+1]=0;}} col=col.filter(v=>v); while(col.length<4)dir==='up'?col.push(0):col.unshift(0); if(dir==='down')col.reverse(); for(let r=0;r<4;r++)board[r][c]=col[r];}} moved=!old.every((row,r)=>row.every((v,c)=>v===board[r][c])); if(moved){addRandom();render();if(isGameOver()){over=true;render();}} return moved;} function isGameOver(){for(let r=0;r<4;r++)for(let c=0;c<4;c++){if(board[r][c]===0)return false; if(c<3&&board[r][c]===board[r][c+1])return false; if(r<3&&board[r][c]===board[r+1][c])return false;} return true;} function render(){grid.innerHTML='';board.forEach(row=>row.forEach(v=>{const d=document.createElement('div');d.style.width='70px';d.style.height='70px';d.style.background=v?`hsl(${Math.log2(v)*25},70%,50%)`:'#333';d.style.borderRadius='8px';d.style.display='flex';d.style.alignItems='center';d.style.justifyContent='center';d.style.fontWeight='bold';d.style.fontSize='1.2rem';d.textContent=v||'';grid.appendChild(d);})); scEl.textContent=score; if(over){scEl.textContent=`Игра окончена! Счёт: ${score}`;}} document.addEventListener('keydown',function gk(e){e.preventDefault(); if(e.key==='ArrowLeft')move('left'); else if(e.key==='ArrowRight')move('right'); else if(e.key==='ArrowUp')move('up'); else if(e.key==='ArrowDown')move('down');}); c.querySelector('#g2048r').onclick=init; init(); return ()=>{}; }
+</script>
+</body>
+</html>
